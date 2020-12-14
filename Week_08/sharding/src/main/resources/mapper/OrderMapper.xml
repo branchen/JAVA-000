@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.week08.sharding.dao.mapper.OrderMapper">
+    <resultMap id="rsMap" type="com.week08.sharding.dao.entity.Order">
+        <id property="id" column="id"/>
+        <result property="code" column="code"/>
+        <result property="merchantId" column="merchant_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="amount" column="amount"/>
+        <result property="cutAmount" column="cut_amount"/>
+        <result property="shippingAddressId" column="shipping_address_id"/>
+        <result property="status" column="status"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <update id="createTableIfNotExists">
+        CREATE TABLE IF NOT EXISTS `order`
+        (
+            `id`                  bigint(20) primary key comment '订单 ID',
+            `code`                varchar(40) not null comment '订单编码',
+            `merchant_id`         bigint(20)  not null comment '卖家 ID',
+            `user_id`             bigint(20)  not null comment '买家 ID',
+            `amount`              int(10)     not null comment '订单金额',
+            `cut_amount`          int(10)     not null comment '订单优惠金额',
+            `shipping_address_id` bigint(20)  not null comment '订单配送地址',
+            `status`              int(2)      not null comment '订单状态',
+            `gmt_create`          timestamp   not null default current_timestamp comment '创建时间',
+            `gmt_modified`        timestamp   not null default current_timestamp on update current_timestamp comment '更新时间'
+        ) ENGINE = InnoDB
+          DEFAULT CHARSET = utf8mb4 COMMENT '订单';
+    </update>
+
+    <insert id="create" parameterType="com.week08.sharding.dao.entity.Order" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `order` (`code`, `merchant_id`, `user_id`, `amount`, `cut_amount`, `shipping_address_id`, `status`)
+        values (#{order.code}, #{order.merchantId}, #{order.userId}, #{order.amount}, #{order.cutAmount}, #{order.shippingAddressId}, #{order.status});
+    </insert>
+
+    <update id="dropTable">
+        DROP TABLE IF EXISTS `order`;
+    </update>
+
+    <select id="get" resultMap="rsMap">
+        SELECT *
+        FROM `order`
+        WHERE `user_id` = #{userId}
+          AND `id` = #{orderId}
+    </select>
+
+    <select id="listByUserId" resultMap="rsMap">
+        SELECT *
+        FROM `order`
+        WHERE `user_id` = #{userId}
+    </select>
+</mapper>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.week08.sharding.dao.mapper.OrderItemMapper">
+    <resultMap id="rsMap" type="com.week08.sharding.dao.entity.OrderItem">
+        <id property="id" column="id"/>
+        <result property="orderId" column="order_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="skuCode" column="sku_code"/>
+        <result property="quantity" column="quantity"/>
+        <result property="price" column="price"/>
+        <result property="itemAmount" column="item_amount"/>
+        <result property="cutAmount" column="cut_amount"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <update id="createTableIfNotExists">
+        CREATE TABLE IF NOT EXISTS `order_item`
+        (
+            `id`           bigint(20) primary key comment '订单项 ID',
+            `order_id`     bigint(20)  not null comment '订单 ID',
+            `user_id`      bigint(20)  not null comment '用户 ID',
+            `sku_code`     varchar(10) not null comment 'SKU 编码',
+            `quantity`     int(4)      not null comment 'SKU 数量',
+            `price`        int(10)     not null comment '商品价格',
+            `item_amount`  int(10)     not null comment '订单项金额',
+            `cut_amount`   int(10)     not null comment '订单项优惠金额',
+            `gmt_create`   timestamp   not null default current_timestamp comment '创建时间',
+            `gmt_modified` timestamp   not null default current_timestamp on update current_timestamp comment '更新时间'
+        ) ENGINE = InnoDB
+          DEFAULT CHARSET = utf8mb4 COMMENT '订单项';
+    </update>
+
+    <insert id="create" parameterType="java.util.List">
+        INSERT INTO `order_item`(`order_id`, `user_id`, `sku_code`, `quantity`, `price`, `item_amount`, `cut_amount`)
+        VALUES
+        <foreach collection="orderItems" item="orderItem" separator="," close=";">
+            (#{orderItem.orderId}, #{orderItem.userId}, #{orderItem.skuCode}, #{orderItem.quantity}, #{orderItem.price}, #{orderItem.itemAmount}, #{orderItem.cutAmount})
+        </foreach>
+
+    </insert>
+
+    <update id="dropTable">
+        DROP TABLE IF EXISTS `order_item`;
+    </update>
+
+    <select id="listUserOrderItems" parameterType="com.week08.sharding.dao.entity.OrderItem" resultMap="rsMap" resultType="arraylist">
+        SELECT *
+        FROM `order_item`
+        WHERE `user_id` = #{userId}
+        AND `order_id` IN
+        <foreach collection="orderIds" item="orderId" open="(" close=")" separator=",">
+            #{orderId}
+        </foreach>
+    </select>
+</mapper>
